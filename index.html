@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<script>
+  (function() {
+    var GA_ID = 'G-VFNHMSHJ52';
+    var isLocalDev = ['localhost', '127.0.0.1', ''].includes(location.hostname);
+    if (isLocalDev) return;
+    try { if (/[?&]no_ga=0/.test(location.search)) localStorage.removeItem('no_ga'); if (/[?&]no_ga=1/.test(location.search)) localStorage.setItem('no_ga', '1'); if (localStorage.getItem('no_ga') === '1') return; } catch (e) {}
+    var gaQ = new URLSearchParams(location.search); if (gaQ.get('obs') === '1' || gaQ.get('no_ga') === '1') return;
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_ID;
+    document.head.appendChild(s);
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', GA_ID);
+    document.addEventListener('click', function(e) {
+      var a = e.target && e.target.closest ? e.target.closest('a[href*="booth.pm"]') : null;
+      if (!a) return;
+      gtag('event', 'booth_click', { link_url: a.href, link_id: a.id || '', link_text: (a.textContent || '').trim().slice(0, 40) });
+    });
+  })();
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="痛バッグに缶バッジが何個入るかを無料で計算。窓の幅と高さ、缶バッジの直径(57mm・75mmなど)を入れるだけで、格子と互い違いのどちらが多く入るかを比べて配置図を表示。ハート形の並べ方、あと何個で埋まるかもわかります。登録不要。">
+<link rel="canonical" href="https://uuhai0625.github.io/itaba-simulator/">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="ja_JP">
+<meta property="og:title" content="痛バの缶バッジ何個入る?計算・配置シミュレーター|57mm・75mm・ハート配置(無料)">
+<meta property="og:description" content="痛バッグに缶バッジが何個入るかを無料で計算。窓の幅と高さ、缶バッジの直径(57mm・75mmなど)を入れるだけで、格子と互い違いのどちらが多く入るかを比べて配置図を表示。ハート形の並べ方、あと何個で埋まるかもわかります。登録不要。">
+<meta property="og:url" content="https://uuhai0625.github.io/itaba-simulator/">
+<meta property="og:image" content="https://uuhai0625.github.io/itaba-simulator/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<title>痛バの缶バッジ何個入る?計算・配置シミュレーター|57mm・75mm・ハート配置(無料)</title>
+<style>
+  :root {
+    --bg: #f5f2f4;
+    --panel: #ffffff;
+    --border: #e2d9df;
+    --field-border: #625760;
+    --text: #261f24;
+    --muted: #5c5259;
+    --accent: #8c3a74;
+    --accent-dark: #632653;
+    --soft: #f6e9f2;
+    --ng: #b3261e;
+    --locked: #d0c4cc;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+  header { background: var(--accent-dark); color: #fff; padding: 24px 20px 18px; text-align: center; }
+  header h1 { margin: 0 0 6px; font-size: 1.35rem; }
+  header p { margin: 0; font-size: .9rem; }
+  main { max-width: 1120px; margin: 0 auto; padding: 22px 16px 50px; }
+  main > * { min-width: 0; }
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "win pv" "badge pv" "look pv"; column-gap: 18px; align-items: start; }
+  .layout > * { min-width: 0; }
+  #win-card { grid-area: win; } #badge-card { grid-area: badge; } #look-card { grid-area: look; }
+  #pv-card { grid-area: pv; position: sticky; top: 12px; }
+  section.card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; margin-bottom: 18px; }
+  section.card h2 { margin: 0 0 6px; font-size: 1.05rem; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .desc { color: var(--muted); font-size: .84rem; margin: 0 0 12px; }
+  .fine { color: var(--muted); font-size: .8rem; margin: 8px 0 0; }
+  .badge { display: inline-block; font-size: .7rem; padding: 2px 8px; border-radius: 999px; background: #fff1cc; color: #7a5600; font-weight: bold; }
+  .hidden { display: none !important; }
+  label.field, div.field { display: block; margin-bottom: 12px; }
+  .lbl { font-size: .85rem; font-weight: bold; display: block; }
+  .hint { font-size: .78rem; color: var(--muted); font-weight: normal; display: block; margin-top: 2px; }
+  select, input[type=number], input[type=file] { margin-top: 5px; min-height: 44px; border: 1px solid var(--field-border); border-radius: 8px; font-size: 1rem; font-family: inherit; background: #fff; color: var(--text); width: 100%; padding: 8px 10px; }
+  input[type=color] { margin-top: 5px; min-height: 44px; width: 100%; border: 1px solid var(--field-border); border-radius: 8px; background: #fff; }
+  .row2 { display: flex; gap: 12px; }
+  .row2 > * { flex: 1; min-width: 0; }
+  .btn-row { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .btn { min-height: 44px; min-width: 44px; padding: 9px 16px; border-radius: 8px; font-size: .88rem; cursor: pointer; border: 1px solid var(--field-border); background: #fff; color: var(--text); font-family: inherit; }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: bold; }
+  .btn.small { padding: 6px 12px; font-size: .82rem; }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .btn:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible, canvas:focus-visible { outline: 2px solid var(--accent-dark); outline-offset: 2px; }
+  .btn-row .btn { flex: 1; }
+  .status { font-size: .82rem; color: var(--muted); margin-top: 6px; min-height: 1.2em; }
+  .status.err { color: var(--ng); font-weight: bold; }
+  .quick { margin: 4px 0 0; padding: 10px 12px; border-radius: 8px; background: var(--soft); font-weight: bold; color: var(--accent-dark); }
+  .quick a { color: inherit; font-weight: normal; font-size: .84rem; }
+  .big { font-size: 1.6rem; font-weight: bold; color: var(--accent-dark); margin: 0; line-height: 1.3; }
+  .sub { font-size: .86rem; margin: 4px 0 0; }
+  .pv { border: 1px solid var(--border); border-radius: 8px; background: #ebe5e9; padding: 10px; display: flex; justify-content: center; margin-top: 10px; }
+  #cv { max-width: 100%; max-height: max(320px, calc(100vh - 360px)); width: auto; height: auto; display: block; }
+  .cmp { width: 100%; border-collapse: collapse; font-size: .84rem; margin-top: 8px; }
+  .cmp th, .cmp td { border: 1px solid var(--border); padding: 4px 8px; text-align: center; }
+  .cmp th { background: var(--soft); }
+  .cmp td.on { font-weight: bold; color: var(--accent-dark); }
+  .cmp tbody th { background: none; font-weight: normal; text-align: left; }
+  .guide { font-size: .88rem; }
+  .guide h3 { font-size: .95rem; margin: 14px 0 4px; }
+  .guide ul, .guide ol { padding-left: 1.3em; margin: 6px 0; }
+  .guide li { margin: 4px 0; }
+  .locked-panel { border: 1px dashed var(--locked); border-radius: 10px; padding: 16px; text-align: center; color: var(--muted); background: #fbf8fa; }
+  .locked-panel .lead { color: var(--text); font-weight: bold; }
+  .locked-panel .feat-list { text-align: left; max-width: 620px; margin: 10px auto; font-size: .85rem; padding-left: 1.2em; }
+  .buy-btn { display: inline-block; margin-top: 8px; background: var(--accent-dark); color: #fff; font-weight: bold; padding: 11px 22px; border-radius: 999px; text-decoration: none; font-size: .9rem; }
+  footer { max-width: 1120px; margin: 0 auto; padding: 0 16px 40px; font-size: .8rem; color: var(--muted); }
+  footer a { color: var(--muted); }
+  @media (max-width: 860px) {
+    .layout { grid-template-columns: minmax(0, 1fr); grid-template-areas: "win" "badge" "pv" "look"; }
+    #pv-card { position: static; }
+    #cv { max-height: 70vh; }
+  }
+  @media (max-width: 600px) {
+    .row2 { flex-direction: column; gap: 0; }
+    section.card { padding: 16px 12px; }
+  }
+</style>
+<!--ANSHIN_CSS_START--><style>:root{--anshin-w:1088px;--anshin-pad:16px}.anshin-strip,.anshin{box-sizing:border-box;width:min(var(--anshin-w),calc(100% - 2 * var(--anshin-pad)));margin-left:auto;margin-right:auto}.anshin-strip{list-style:none;margin-top:10px;margin-bottom:0;padding:0;display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;font-size:.8rem;line-height:1.5}.anshin-strip li{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border:1px solid rgba(20,120,90,.45);border-radius:999px;background:rgba(20,120,90,.07)}.anshin-strip li.anshin-more{border:0;background:none;padding:3px 2px}.anshin-strip a,.anshin a{color:inherit}.anshin{margin-top:18px;margin-bottom:18px;padding:14px 18px;border:1px solid rgba(20,120,90,.45);border-radius:10px;background:rgba(20,120,90,.05);font-size:.86rem;line-height:1.7}.anshin h2{font-size:1rem;margin:0 0 6px}.anshin p{margin:0 0 6px}.anshin ul{margin:0;padding-left:1.2em}.anshin li{margin:3px 0}.anshin details{margin-top:6px}.anshin summary{cursor:pointer;font-weight:bold}.anshin .anshin-meta{margin:8px 0 0;font-size:.8rem;opacity:.85}@media print{.anshin,.anshin-strip{display:none!important}}</style><!--ANSHIN_CSS_END-->
+<!--UPSELL_CSS_START--><style>.upsell-top{box-sizing:border-box;width:min(var(--anshin-w,880px),calc(100% - 2 * var(--anshin-pad,16px)));margin:12px auto 0;font-size:.85rem;line-height:1.6}.upsell-top a{color:inherit}.upsell-assure{list-style:none;margin:12px 0 10px;padding:0;display:flex;flex-wrap:wrap;gap:6px 8px;font-size:.8rem;line-height:1.5}.upsell-assure li{padding:3px 10px;border:1px solid rgba(20,120,90,.45);border-radius:12px;background:rgba(20,120,90,.06)}.upsell-terms{margin:8px 0 0;font-size:.78rem;line-height:1.6;opacity:.85}.upsell-toast{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);z-index:9999;box-sizing:border-box;width:min(520px,calc(100% - 24px));padding:14px 56px 14px 16px;border-radius:12px;background:#fff;color:#222;border:1px solid #c9c2d6;box-shadow:0 6px 24px rgba(0,0,0,.18);font-size:.88rem;line-height:1.6}.upsell-toast p{margin:0 0 6px;font-weight:bold}.upsell-toast ul{margin:0 0 10px;padding-left:1.2em}.upsell-toast li{margin:2px 0}.upsell-toast .upsell-note{display:block;margin-top:6px;font-size:.75rem;color:#555}.upsell-toast .upsell-go{display:inline-flex;align-items:center;min-height:44px;padding:0 18px;border-radius:8px;background:#c9283e;color:#fff;font-weight:bold;text-decoration:none}.upsell-toast .upsell-go:focus-visible,.upsell-toast .upsell-x:focus-visible{outline:3px solid #2560c4;outline-offset:2px}.upsell-toast .upsell-x{position:absolute;top:4px;right:4px;width:44px;height:44px;border:0;border-radius:8px;background:transparent;color:#555;font-size:1.3rem;line-height:1;cursor:pointer}.upsell-inline{white-space:nowrap;color:inherit;text-decoration:underline;text-underline-offset:2px}@media print{.upsell-top,.upsell-assure,.upsell-terms,.upsell-toast,.upsell-inline{display:none!important}}</style><!--UPSELL_CSS_END-->
+</head>
+<body>
+
+<header>
+  <h1>痛バの缶バッジ何個入る?計算・配置シミュレーター</h1>
+  <p>痛バッグの窓の大きさと缶バッジのサイズを入れるだけで、何個入るか・どう並べると多く入るかを図で表示。ハート形の並べ方にも対応。登録不要・スマホでも使えます</p>
+</header>
+<!--ANSHIN_STRIP_START-->
+<ul class="anshin-strip" aria-label="データの扱い">
+  <li><span aria-hidden="true">✓</span> 入力内容はこの端末の中だけで処理</li>
+  <li><span aria-hidden="true">✓</span> 登録・ログイン不要</li>
+  <li><span aria-hidden="true">✓</span> 仕組みを公開中</li>
+  <li class="anshin-more"><a href="#anshin">データの扱いをくわしく</a></li>
+</ul>
+<!--ANSHIN_STRIP_END-->
+<!--UPSELL_TOP_START--><p class="upsell-top no-print" id="upsellTop">このページは無料のまま使えます。機能を増やしたい方は <a href="#pro-section">買い切り版(¥100・1回払い)<span aria-hidden="true"> ↓</span></a></p><!--UPSELL_TOP_END-->
+
+<main>
+<div class="layout">
+
+  <section class="card" id="win-card">
+    <h2>① 痛バの窓の大きさ</h2>
+    <p class="desc">缶バッジを並べる透明な窓の、内側の幅と高さを測って入れます。</p>
+    <label class="field"><span class="lbl">大きさの例から選ぶ</span>
+      <select id="inPreset">
+        <option value="">自分で入力する</option>
+        <option value="210x297" selected>窓がA4の紙くらい(21×29.7cm)</option>
+        <option value="297x420">窓がA3の紙くらい(29.7×42cm)</option>
+        <option value="182x257">窓がB5の紙くらい(18.2×25.7cm)</option>
+        <option value="148x210">窓がA5の紙くらい(14.8×21cm)</option>
+        <option value="235x125">横長の窓の例(23.5×12.5cm)</option>
+        <option value="250x250">正方形の窓 25cm</option>
+      </select>
+      <span class="hint">「A4サイズの痛バ」でも、窓は紙のA4より小さいことが多いです。正確に知りたいときは窓を測ってください</span>
+    </label>
+    <div class="row2">
+      <label class="field"><span class="lbl">窓の幅(mm)</span><input type="number" id="inW" min="40" max="800" step="1" value="210" inputmode="decimal"></label>
+      <label class="field"><span class="lbl">窓の高さ(mm)</span><input type="number" id="inH" min="40" max="800" step="1" value="297" inputmode="decimal"></label>
+    </div>
+    <div class="btn-row" style="margin-top:0"><button type="button" class="btn small" id="swapBtn">縦と横を入れかえる</button></div>
+  </section>
+
+  <section class="card" id="badge-card">
+    <h2>② 缶バッジ</h2>
+    <div class="row2">
+      <label class="field"><span class="lbl">缶バッジの直径</span>
+        <select id="inSize">
+          <option value="32">32mm</option>
+          <option value="44">44mm</option>
+          <option value="54">54mm</option>
+          <option value="56">56mm</option>
+          <option value="57" selected>57mm</option>
+          <option value="65">65mm</option>
+          <option value="75">75mm</option>
+          <option value="76">76mm</option>
+          <option value="custom">直径を入力する</option>
+        </select>
+      </label>
+      <label class="field" id="customField"><span class="lbl">直径(mm)</span><input type="number" id="inD" min="15" max="200" step="0.5" value="57" inputmode="decimal"></label>
+    </div>
+    <div class="row2">
+      <label class="field"><span class="lbl">缶バッジどうしのすき間(mm)</span><input type="number" id="inGap" min="-25" max="30" step="0.5" value="1" inputmode="decimal" aria-describedby="gapHint"><span class="hint" id="gapHint">ぴったり並べるなら0〜1mm。少しずつ重ねて付けるときはマイナス(例: -5で5mm重ねる)。カバーをつけるときは、カバーを含めた直径(+3〜5mmくらい)にしてください</span></label>
+      <label class="field"><span class="lbl">窓のふちの余白(mm)</span><input type="number" id="inMargin" min="0" max="50" step="0.5" value="2" inputmode="decimal"></label>
+    </div>
+    <label class="field"><span class="lbl">持っている缶バッジの数(なくてもOK)</span><input type="number" id="inHave" min="0" max="999" step="1" inputmode="numeric" placeholder="例: 12"><span class="hint">入れると、あと何個で埋まるか・何個あまるかを出します</span></label>
+    <p class="quick" id="quickNum"></p>
+    <p class="status" id="inSt" role="status"></p>
+  </section>
+
+  <section class="card" id="look-card">
+    <h2>③ 並べ方と見た目</h2>
+    <div class="row2">
+      <label class="field"><span class="lbl">形</span>
+        <select id="inShape">
+          <option value="full" selected>窓いっぱいに並べる</option>
+          <option value="heart">ハート形</option>
+          
+        </select>
+      </label>
+      <label class="field"><span class="lbl">並べ方</span>
+        <select id="inArr">
+          <option value="auto" selected>多く入るほう(下の3つから自動)</option>
+          <option value="grid">縦横にそろえる(格子)</option>
+          <option value="hexr">横の列を互い違い</option>
+          <option value="hexc">縦の列を互い違い</option>
+        </select>
+      </label>
+    </div>
+    <label class="field" id="fillField"><span class="lbl" id="fillLbl">形の中</span>
+      <select id="inFill">
+        <option value="fill" selected>中も埋める</option>
+        <option value="ring">ふちだけ(形の線に沿って並べる)</option>
+      </select>
+    </label>
+    <div class="row2">
+      <label class="field"><span class="lbl">中のシートの色</span><input type="color" id="inSheet" value="#f4d6e4"></label>
+      <label class="field"><span class="lbl">缶バッジの色(画像がないとき)</span><input type="color" id="inBadge" value="#ffffff"></label>
+    </div>
+    
+  </section>
+
+  <section class="card" id="pv-card">
+    <h2>結果</h2>
+    <p class="big" id="bigNum" aria-live="polite" aria-atomic="true"></p>
+    <p class="sub" id="subNum"></p>
+    <div class="pv"><canvas id="cv" width="546" height="771" role="img" aria-label="痛バの窓に缶バッジを並べた図"></canvas></div>
+    <table class="cmp">
+      <caption class="fine" style="text-align:left">並べ方ごとの個数(★がいちばん多い)</caption>
+      <thead><tr><th scope="col">並べ方</th><th scope="col">窓いっぱい</th><th scope="col" id="thShape">ハート形</th></tr></thead>
+      <tbody id="cmpBody"></tbody>
+    </table>
+    <div class="status" id="outSt" role="status"></div>
+    <div class="btn-row">
+      <button type="button" class="btn primary" id="saveBtn">図を画像で保存</button>
+    </div>
+    <p class="fine">個数は計算上の目安です。図の中の数字は、並べる順番の目安です。実際の窓は角が丸かったり、ふちが布で少し隠れたりするので、1〜2個少なくなることがあります。</p>
+  </section>
+
+</div>
+
+  <section class="card" id="pro-section">
+    <h2>自分の缶バッジの画像で並べてみる <span class="badge">買い切り版 ¥100(税込)</span></h2>
+    <div class="locked-panel">
+      <p class="lead">持っている缶バッジの写真を並べて、完成イメージを見られます。</p>
+      <p>このページの機能は無料でそのまま使えます。買い切り版(ダウンロード購入)では、次の機能が増えます:</p>
+      <ul class="feat-list">
+        <li><strong>缶バッジの画像で完成イメージ</strong>: 写真をまとめて選ぶと、丸く切り取って窓に並べます</li>
+        <li><strong>場所の入れかえ・色の順に並べる</strong>: 2つ押して入れかえ、色が近い順に自動で並べかえ</li>
+        <li><strong>形が増えます</strong>: 丸形・ひし形(無料版はいっぱい・ハート形)</li>
+        <li><strong>保存する図にツール名が入りません</strong></li>
+        <li><strong>パソコンで使うHTMLファイルです</strong>(スマホでの動作は保証していません)。ダブルクリックで開くだけ、ネットにつながっていなくても使えます</li>
+      </ul>
+<!--UPSELL_ASSURE_START--><ul class="upsell-assure" aria-label="買い切り版について"><li>¥100(税込)の1回払い・月額なし</li><li>パソコン向けのHTMLファイル(スマホでは開けない機種あり)</li><li>ネットにつながっていなくても動く</li><li>BOOTHで購入(クレジットカード・楽天ペイは手数料なし、コンビニ・銀行払いは別途手数料)</li></ul><!--UPSELL_ASSURE_END-->
+      <a class="buy-btn" href="https://uuhai0625.booth.pm/items/8995486" id="buyLink" target="_blank" rel="noopener">パソコン用の買い切り版を見る(BOOTH・新しいタブ)</a><!--UPSELL_TERMS_START--><p class="upsell-terms">販売者の情報・返品などの販売条件は、BOOTHの商品ページでご確認ください。BOOTHでの購入にはpixivのアカウントが必要です。</p><!--UPSELL_TERMS_END-->
+    </div>
+  </section>
+
+  <section class="card guide" id="guide">
+    <h2>痛バに缶バッジが何個入るか調べる方法</h2>
+    <ol>
+      <li>痛バッグの透明な窓の、内側の幅と高さを定規で測って①に入れます。</li>
+      <li>②で缶バッジの直径を選びます。グッズの缶バッジは57mm前後・75mm前後が多く、商品ページに直径が書いてあります。</li>
+      <li>結果に、3つの並べ方のうち多く入るほうと個数(目安)が出ます。「持っている缶バッジの数」を入れると、あと何個で埋まるかもわかります。</li>
+    </ol>
+    <h3>多く入れるコツ</h3>
+    <ul>
+      <li><strong>互い違いに並べる</strong>: 縦横にそろえる(格子)より、1列ずつ半分ずらす(互い違い)ほうが多く入ることがあります。どちらが多いかは窓の大きさで変わるので、表で比べてください。</li>
+      <li><strong>縦と横を入れかえて比べる</strong>: 「横の列を互い違い」と「縦の列を互い違い」で、個数が変わることがあります。</li>
+      <li><strong>ハート形</strong>: 形にすると、いっぱいに並べるより少ない数で作れます。持っている数が少ないときに。</li>
+    </ul>
+    <h3>よくある質問</h3>
+    <ul>
+      <li><strong>計算どおりに入らない?</strong> 窓の角が丸い、ふちの布で数mm隠れる、中のシートの留められる位置が限られる、などで1〜2個少なくなることがあります。余白やすき間を少し大きくして試してください。</li>
+      <li><strong>商品ページの「最大◯個」より少ない?</strong> 商品ページの数は、缶バッジを少しずつ重ねて付けた数のことが多いです。重ねて付けるときは、すき間をマイナス(例: -5mm)にすると近い数になります。</li>
+      <li><strong>缶バッジのサイズがわからない</strong> 商品ページや台紙に「約57mm」などと書いてあります。わからないときは、定規で表の直径を測ってください。</li>
+      <li><strong>サイズの違う缶バッジを混ぜたい</strong> いまは1つのサイズだけです。大きいサイズで計算すると、少なめの目安になります。</li>
+    </ul>
+  </section>
+
+</main>
+
+<!--ANSHIN_START-->
+<section class="anshin" id="anshin" aria-labelledby="anshin-title">
+  <h2 id="anshin-title">データの扱いについて</h2>
+  <p>このページには、入力した内容を受け取る仕組みがありません。入力した文字や数字は、あなたのスマホやパソコンの中だけで処理されます。</p>
+  <ul>
+    <li>会員登録・ログイン・メールアドレスの入力はありません。</li>
+    <li>自分で確かめたい方へ: ページを開いたあと機内モードにしても、そのまま使えます。</li>
+  </ul>
+  <details>
+    <summary>もっとくわしく(保存・アクセス解析・公開について)</summary>
+    <ul>
+      <li>保存されるデータは、この端末のこのブラウザの中にだけ残ります(localStorage・sessionStorage)。共用のパソコンでは使い終わったら消してください。</li>
+      <li>アクセス解析(Google Analytics)のため、見たページのURL・参照元・端末やブラウザの種類・おおよその地域(IPアドレスから推定)・Cookieの識別子・BOOTHへのリンクのクリック・どのボタンを押したか(回数や選んだ設定を含む)がGoogleに送られます。目的は利用状況の把握です。入力した文字や画像は送りません。(<a href="https://policies.google.com/technologies/partner-sites?hl=ja" target="_blank" rel="noopener">Googleによるデータの使用</a>/<a href="https://tools.google.com/dlpage/gaoptout?hl=ja" target="_blank" rel="noopener">計測を止めるアドオン</a>。止めてもツールはそのまま使えます)</li>
+      <li>このツールの結果や作成物は目安です。入稿・契約・販売などの前には、印刷所や公式の情報でご確認ください。</li>
+      <li>処理の中身はすべて公開しています(詳しい方向け: <a href="https://github.com/uuhai0625/itaba-simulator" target="_blank" rel="noopener">GitHub</a>)。</li>
+    </ul>
+  </details>
+  <p class="anshin-meta">作っている人: ウーハイ(個人開発)/不具合・ご質問は<a href="https://x.com/uuhai0625" target="_blank" rel="noopener">X(@uuhai0625)</a>へ/<a href="https://uuhai0625.github.io/" target="_blank" rel="noopener">ほかのツール</a>/この説明の更新日: 2026-10-13</p>
+</section>
+<!--ANSHIN_END-->
+
+<footer>
+  <p id="privacyNote">本ツールは完全にブラウザ内で動作し、入力した内容や画像はどこにも送信されません。</p>
+  <p><a href="https://uuhai0625.booth.pm/" target="_blank" rel="noopener">他のツールも見る(BOOTHショップ)</a></p>
+  <p>不具合・ご要望は X <a href="https://x.com/uuhai0625" target="_blank" rel="noopener">@uuhai0625</a> まで。</p>
+  <p class="related-tools no-print">関連する無料ツール: <a href="https://uuhai0625.github.io/kanbadge-template/" target="_blank" rel="noopener">缶バッジテンプレートメーカー</a> ・ <a href="https://uuhai0625.github.io/uchiwa-moji-maker/" target="_blank" rel="noopener">うちわ文字メーカー</a> ・ <a href="https://uuhai0625.github.io/#free-tools">ツール一覧</a></p>
+</footer>
+
+<script>
+(function () {
+  "use strict";
+
+  var EDITION = "free"; // "full" で買い切り完全版
+
+  function track(name, params) {
+    if (!window.dataLayer) return;
+    (function () { window.dataLayer.push(arguments); })("event", name, params || {});
+  }
+  var $ = function (id) { return document.getElementById(id); };
+  function setSt(id, msg, err) { var e = $(id); if (!e) return; e.textContent = msg; e.classList.toggle("err", !!err); }
+  function num(id, def, lo, hi) { var v = parseFloat($(id).value); if (!isFinite(v)) v = def; return Math.max(lo, Math.min(hi, v)); }
+
+  var CREDIT = true;
+  
+  var SHAPE_NAME = { full: "窓いっぱい", heart: "ハート形", circle: "丸形", diamond: "ひし形" };
+  var ARR_NAME = { grid: "縦横にそろえる(格子)", hexr: "横の列を互い違い", hexc: "縦の列を互い違い" };
+
+  function conf() {
+    var sz = $("inSize").value, D = sz === "custom" ? num("inD", 57, 15, 200) : +sz;
+    return {
+      W: num("inW", 210, 40, 800), H: num("inH", 297, 40, 800), D: D,
+      g: Math.max(-D * 0.45, num("inGap", 1, -25, 30)), m: num("inMargin", 2, 0, 50),
+      shape: SHAPE_NAME[$("inShape").value] ? $("inShape").value : "full",
+      arr: $("inArr").value
+    };
+  }
+
+  // ===== 並べる位置 =====
+  // 格子
+  function grid(C, ox, oy) {
+    var p = C.D + C.g, aw = C.W - 2 * C.m, ah = C.H - 2 * C.m, out = [];
+    var cols = Math.floor((aw + C.g) / p), rows = Math.floor((ah + C.g) / p);
+    if (ox == null) { ox = (aw - (cols * p - C.g)) / 2; oy = (ah - (rows * p - C.g)) / 2; }
+    for (var r = 0; ; r++) {
+      var y = C.m + oy + r * p + C.D / 2; if (y + C.D / 2 > C.H - C.m + 1e-6) break;
+      for (var c = 0; ; c++) { var x = C.m + ox + c * p + C.D / 2; if (x + C.D / 2 > C.W - C.m + 1e-6) break; out.push([x, y]); }
+    }
+    return out;
+  }
+  // 横の列を互い違い(1列ごとに半分ずらす)
+  function hexRows(C, ox, oy, startOdd) {
+    var d = C.D, p = d + C.g, rs = p * Math.sqrt(3) / 2, aw = C.W - 2 * C.m, ah = C.H - 2 * C.m, out = [];
+    if (aw < d || ah < d) return out;
+    if (ox == null) {
+      var ce = Math.floor((aw + C.g) / p), co = Math.floor((aw - p / 2 + C.g) / p), rows = Math.floor((ah - d) / rs) + 1;
+      var bw = co > 0 ? Math.max(ce * p - C.g, p / 2 + co * p - C.g) : ce * p - C.g;
+      ox = (aw - bw) / 2; oy = (ah - ((rows - 1) * rs + d)) / 2;
+    }
+    for (var r = 0; ; r++) {
+      var y = C.m + oy + r * rs + d / 2; if (y + d / 2 > C.H - C.m + 1e-6) break;
+      var sh = ((r + (startOdd ? 1 : 0)) % 2) ? p / 2 : 0;
+      for (var c = 0; ; c++) { var x = C.m + ox + sh + c * p + d / 2; if (x + d / 2 > C.W - C.m + 1e-6) break; out.push([x, y]); }
+    }
+    return out;
+  }
+  function swapC(C) { var o = {}; for (var k in C) o[k] = C[k]; o.W = C.H; o.H = C.W; return o; }
+  function layoutFull(C, arr) {
+    if (arr === "grid") return grid(C);
+    if (arr === "hexr") { var a = hexRows(C), b = hexRows(C, null, null, true); return b.length > a.length ? b : a; }
+    var t = layoutFull(swapC(C), "hexr");
+    return t.map(function (q) { return [q[1], q[0]]; });
+  }
+  // ===== 形(缶バッジの中心を通る線。窓の大きさに合わせてのばす) =====
+  // 0〜1の範囲の点の列を返す(上が0、時計回り)
+  var SHAPES = {
+    full: null,
+    // ハート: x=16sin³t, y=13cost-5cos2t-2cos3t-cos4t(よく使われるハートの式)
+    heart: function () {
+      var pts = [];
+      for (var i = 0; i < 240; i++) {
+        var t = i / 240 * Math.PI * 2, s = Math.sin(t);
+        pts.push([16 * s * s * s, -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t))]);
+      }
+      return pts;
+    },
+    circle: function () { var p = []; for (var i = 0; i < 360; i++) { var t = i / 360 * Math.PI * 2; p.push([Math.sin(t), -Math.cos(t)]); } return p; },
+    diamond: function () {
+      var v = [[0, -1], [1, 0], [0, 1], [-1, 0]], p = [];
+      for (var e = 0; e < 4; e++) for (var i = 0; i < 90; i++) { var a = v[e], b = v[(e + 1) % 4], f = i / 90; p.push([a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f]); }
+      return p;
+    }
+  };
+  // 線を窓に合わせる(缶バッジがはみ出さないように半径ぶん内側。縦横は1.25倍までのばす)
+  function shapePath(C, shape) {
+    var raw = SHAPES[shape](), x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+    raw.forEach(function (q) { x0 = Math.min(x0, q[0]); x1 = Math.max(x1, q[0]); y0 = Math.min(y0, q[1]); y1 = Math.max(y1, q[1]); });
+    var bw = C.W - 2 * C.m - C.D, bh = C.H - 2 * C.m - C.D;
+    if (bw <= 0 || bh <= 0) return null;
+    var rw = x1 - x0, rh = y1 - y0, sx = bw / rw, sy = bh / rh;
+    if (sy > sx * 1.25) sy = sx * 1.25; if (sx > sy * 1.25) sx = sy * 1.25;
+    var cx = C.W / 2, cy = C.H / 2;
+    return raw.map(function (q) { return [cx + (q[0] - (x0 + x1) / 2) * sx, cy + (q[1] - (y0 + y1) / 2) * sy]; });
+  }
+  function inPoly(poly, x, y) {
+    var c = false;
+    for (var i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+      var a = poly[i], b = poly[j];
+      if ((a[1] > y) !== (b[1] > y) && x < (b[0] - a[0]) * (y - a[1]) / (b[1] - a[1]) + a[0]) c = !c;
+    }
+    return c;
+  }
+  function farFrom(list, x, y, d) { for (var i = 0; i < list.length; i++) if (Math.hypot(list[i][0] - x, list[i][1] - y) < d - 1e-6) return false; return true; }
+  // 線に沿って同じ間隔で置く(重なる場合は数を減らす)
+  function outline(C, poly) {
+    var p = C.D + C.g, cum = [0];
+    for (var i = 1; i <= poly.length; i++) { var a = poly[i - 1], b = poly[i % poly.length]; cum.push(cum[i - 1] + Math.hypot(b[0] - a[0], b[1] - a[1])); }
+    var L = cum[cum.length - 1];
+    function at(s) {
+      s = ((s % L) + L) % L;
+      var lo = 0, hi = cum.length - 1;
+      while (hi - lo > 1) { var mid = (lo + hi) >> 1; if (cum[mid] <= s) lo = mid; else hi = mid; }
+      var a = poly[lo % poly.length], b = poly[(lo + 1) % poly.length], f = (s - cum[lo]) / Math.max(1e-9, cum[lo + 1] - cum[lo]);
+      return [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f];
+    }
+    // 同じ間隔で置き、くぼみで重なる点だけ飛ばす。数と始める位置を何通りか試して、いちばん多いものを使う
+    var best = [], nMax = Math.floor(L / p);
+    for (var n = nMax; n >= Math.max(3, nMax - 3); n--) {
+      for (var off = 0; off < 4; off++) {
+        var pts = [];
+        for (var k = 0; k < n; k++) { var q = at(L / n * (k + off / 4)); if (farFrom(pts, q[0], q[1], p)) pts.push(q); }
+        if (pts.length > best.length) best = pts;
+      }
+    }
+    return best;
+  }
+  function layoutShape(C, arr, shape) {
+    var poly = shapePath(C, shape);
+    if (!poly) return [];
+    var ring = outline(C, poly), best = [];
+    if (!$("inFill") || $("inFill").value !== "ring") {
+      // 中のすき間も、重ならないように格子・互い違いで埋める(ずらし方を何通りか試す)
+      var p = C.D + C.g, rs = p * Math.sqrt(3) / 2;
+      (arr === "auto" ? ["grid", "hexr", "hexc"] : [arr]).forEach(function (a) {
+        var CC = a === "hexc" ? swapC(C) : C, stepY = a === "grid" ? p : rs;
+        for (var i = 0; i < 4; i++) for (var j = 0; j < 4; j++) {
+          var pts = a === "grid" ? grid(CC, p * i / 4, stepY * j / 4) : hexRows(CC, p * i / 4, stepY * j / 4, j % 2 === 1);
+          if (a === "hexc") pts = pts.map(function (q) { return [q[1], q[0]]; });
+          var keep = [];
+          pts.forEach(function (q) { if (farFrom(ring, q[0], q[1], p) && inPoly(poly, q[0], q[1])) keep.push(q); });
+          if (keep.length > best.length) best = keep;
+        }
+      });
+    }
+    var all = ring.concat(best);
+    // 1個しか入らない小さな窓では、まん中に1つ
+    if (!all.length && C.W - 2 * C.m >= C.D && C.H - 2 * C.m >= C.D) all = [[C.W / 2, C.H / 2]];
+    return all;
+  }
+  // 同じ入力では計算し直さない(表で何度も呼ぶため)
+  var shapeCache = {};
+  var layoutShapeRaw = layoutShape;
+  layoutShape = function (C, arr, shape) {
+    var key = [C.W, C.H, C.D, C.g, C.m, arr, shape, $("inFill").value].join(",");
+    if (!shapeCache[key]) { if (Object.keys(shapeCache).length > 60) shapeCache = {}; shapeCache[key] = layoutShapeRaw(C, arr, shape); }
+    return shapeCache[key];
+  };
+  function layout(C, shape, arr) {
+    if (shape === "full") {
+      if (arr !== "auto") return layoutFull(C, arr);
+      var best = [];
+      ["grid", "hexr", "hexc"].forEach(function (a) { var r = layoutFull(C, a); if (r.length > best.length) best = r; });
+      return best;
+    }
+    return layoutShape(C, arr, shape);
+  }
+  // 上から順・左から順に番号をふる
+  // 上から1段ずつ、段の中は左から(段は直径の半分ごとにまとめる)
+  function sortPos(pts, D) {
+    var h = Math.max(1, (D || 50) / 2);
+    return pts.slice().sort(function (a, b) { var ra = Math.round(a[1] / h), rb = Math.round(b[1] / h); return ra !== rb ? ra - rb : a[0] - b[0]; });
+  }
+
+  // ===== 描く =====
+  var imgs = [], order = [], picked = -1;
+  function render(C, pts, k, forSave) {
+    var cv = document.createElement("canvas");
+    var pad = forSave ? 12 : 0, foot = forSave ? Math.max(22, Math.round(k * 6)) : 0;
+    cv.width = Math.round(C.W * k + pad * 2); cv.height = Math.round(C.H * k + pad * 2 + foot);
+    var ctx = cv.getContext("2d");
+    ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, cv.width, cv.height);
+    ctx.translate(pad, pad);
+    ctx.fillStyle = $("inSheet").value; ctx.fillRect(0, 0, C.W * k, C.H * k);
+    ctx.strokeStyle = "rgba(0,0,0,.35)"; ctx.lineWidth = 2; ctx.strokeRect(1, 1, C.W * k - 2, C.H * k - 2);
+    var R = C.D / 2 * k, bc = $("inBadge").value;
+    pts.forEach(function (q, n) {
+      var x = q[0] * k, y = q[1] * k, im = imgs[order[n]];
+      ctx.save();
+      ctx.shadowColor = "rgba(0,0,0,.25)"; ctx.shadowBlur = R * 0.12; ctx.shadowOffsetY = R * 0.05;
+      ctx.beginPath(); ctx.arc(x, y, R, 0, Math.PI * 2); ctx.fillStyle = bc; ctx.fill();
+      ctx.restore();
+      if (im) {
+        ctx.save(); ctx.beginPath(); ctx.arc(x, y, R, 0, Math.PI * 2); ctx.clip();
+        var s = Math.min(im.width, im.height);
+        ctx.drawImage(im, (im.width - s) / 2, (im.height - s) / 2, s, s, x - R, y - R, R * 2, R * 2);
+        ctx.restore();
+      } else {
+        ctx.fillStyle = "rgba(38,31,36,.55)"; ctx.font = "bold " + Math.max(10, R * 0.55) + "px sans-serif";
+        ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(String(n + 1), x, y);
+      }
+      ctx.lineWidth = Math.max(1, R * 0.04); ctx.strokeStyle = n === picked ? "#d0217a" : "rgba(0,0,0,.25)";
+      if (n === picked) ctx.lineWidth = Math.max(3, R * 0.12);
+      ctx.beginPath(); ctx.arc(x, y, R, 0, Math.PI * 2); ctx.stroke();
+    });
+    if (forSave) {
+      var fs = Math.max(13, Math.round(k * 3.2));
+      ctx.fillStyle = "#555"; ctx.font = fs + "px sans-serif"; ctx.textBaseline = "middle"; ctx.textAlign = "left";
+      ctx.fillText("窓 " + C.W + "×" + C.H + "mm・缶バッジ " + C.D + "mm・約" + pts.length + "個", 0, C.H * k + foot / 2 + 2);
+      if (CREDIT) { ctx.textAlign = "right"; ctx.fillText("痛バシミュレーター(無料版)", C.W * k, C.H * k + foot / 2 + 2); }
+    }
+    return cv;
+  }
+
+  // ===== 更新 =====
+  var cv = $("cv"), cur = null, timer = null, lastKey = "";
+  function refresh() {
+    var C = conf();
+    $("customField").classList.toggle("hidden", $("inSize").value !== "custom");
+    $("fillField").classList.toggle("hidden", $("inShape").value === "full");
+    var pts = sortPos(layout(C, C.shape, C.arr), C.D);
+    var lkey = [C.W, C.H, C.D, C.g, C.m, C.shape, C.arr, $("inFill").value].join(",");
+    if (lkey !== lastKey) { picked = -1; lastKey = lkey; }
+    cur = { C: C, pts: pts };
+    // 画像の並び順を数に合わせる
+    // order[場所] = 画像の番号(-1は画像なし)
+    var o = order.filter(function (i) { return i < imgs.length; });
+    for (var i = 0; i < imgs.length; i++) if (o.indexOf(i) < 0) { var e = o.indexOf(-1); if (e >= 0) o[e] = i; else o.push(i); }
+    while (o.length < pts.length) o.push(-1);
+    // 使わない後ろの空きは切る
+    while (o.length > Math.max(pts.length, imgs.length) && o[o.length - 1] === -1) o.pop();
+    order = o;
+    var k = Math.min(546 / C.W, 771 / C.H) * 2;
+    var c2 = render(C, pts, k, false);
+    cv.width = c2.width; cv.height = c2.height; cv.getContext("2d").drawImage(c2, 0, 0); c2.width = c2.height = 0;
+    var n = pts.length;
+    $("bigNum").textContent = n ? (C.shape === "full" ? "" : SHAPE_NAME[C.shape] + "で") + "約" + n + "個 入ります(目安)" : "入りません";
+    if (!n) $("subNum").textContent = "";
+    $("quickNum").innerHTML = "";
+    var qa = document.createTextNode(n ? "→ " + C.D + "mmなら約" + n + "個 入ります(目安) " : "→ 窓が缶バッジより小さいので入りません。余白を減らすか、小さいサイズを選んでください ");
+    var ql = document.createElement("a"); ql.href = "#pv-card"; ql.textContent = "図を見る↓";
+    $("quickNum").appendChild(qa); if (n) $("quickNum").appendChild(ql);
+    $("fillLbl").textContent = (SHAPE_NAME[C.shape] || "形") + "の中";
+    checkInputs(C);
+    var arrUsed = C.arr === "auto" ? bestArr(C) : C.arr;
+    var have = parseInt($("inHave").value, 10), sub = "窓 " + C.W + "×" + C.H + "mm・缶バッジ " + C.D + "mm" + (C.shape === "full" ? "・" + ARR_NAME[arrUsed] : "");
+    if (!n) sub = "窓が缶バッジ(" + C.D + "mm)より小さいので入りません。余白を減らすか、小さいサイズを選んでください。";
+    if (C.g < 0) sub += "・" + (-C.g) + "mmずつ重ねる";
+    if (isFinite(have) && have >= 0 && n) sub += have < n ? "。あと " + (n - have) + "個で埋まります" : have === n ? "。ちょうど埋まります" : "。" + (have - n) + "個あまります";
+    $("subNum").textContent = sub;
+    cv.setAttribute("aria-label", "痛バの窓に缶バッジを" + n + "個並べた図");
+    // 並べ方ごとの比較
+    var tb = $("cmpBody"); tb.textContent = "";
+    var shp = C.shape === "full" ? "heart" : C.shape;
+    $("thShape").textContent = SHAPE_NAME[shp];
+    var rows = ["grid", "hexr", "hexc"].map(function (a) { return [a, layoutFull(C, a).length, layoutShape(C, a, shp).length]; });
+    var bestFull = Math.max.apply(null, rows.map(function (r) { return r[1]; }));
+    var bestShape = Math.max.apply(null, rows.map(function (r) { return r[2]; }));
+    rows.forEach(function (r) {
+      var tr = document.createElement("tr"), th = document.createElement("th");
+      th.scope = "row"; th.textContent = ARR_NAME[r[0]]; tr.appendChild(th);
+      [[r[1], bestFull], [r[2], bestShape]].forEach(function (v) {
+        var td = document.createElement("td"); td.textContent = v[0] + "個" + (v[0] === v[1] && v[1] > 0 ? " ★" : "");
+        if (v[0] === v[1] && v[1] > 0) td.className = "on";
+        tr.appendChild(td);
+      });
+      tb.appendChild(tr);
+    });
+    $("saveBtn").disabled = !n;
+    
+  }
+  // 空の欄・範囲外の数は、計算に使った数を知らせる
+  function checkInputs(C) {
+    var msg = [];
+    [["inW", "幅", 40, 800, C.W], ["inH", "高さ", 40, 800, C.H], ["inMargin", "余白", 0, 50, C.m], ["inGap", "すき間", -25, 30, C.g]].forEach(function (f) {
+      var raw = $(f[0]).value, v = parseFloat(raw), bad = raw === "" || !isFinite(v) || v < f[2] || v > f[3] || (f[0] === "inGap" && v !== C.g);
+      $(f[0]).setAttribute("aria-invalid", bad ? "true" : "false");
+      if (bad) msg.push(f[1] + "は" + f[4] + "mmで計算しています");
+    });
+    setSt("inSt", msg.length ? msg.join("。") + "。" : "", msg.length > 0);
+  }
+  function bestArr(C) {
+    var best = "grid", bn = -1;
+    ["grid", "hexr", "hexc"].forEach(function (a) { var n = layoutFull(C, a).length; if (n > bn) { bn = n; best = a; } });
+    return best;
+  }
+  function later() { clearTimeout(timer); timer = setTimeout(refresh, 150); }
+
+  $("inPreset").addEventListener("change", function () {
+    if (!this.value) return;
+    var v = this.value.split("x"); $("inW").value = v[0]; $("inH").value = v[1]; refresh();
+  });
+  ["inW", "inH"].forEach(function (id) { $(id).addEventListener("input", function () { $("inPreset").value = ""; later(); }); });
+  $("swapBtn").addEventListener("click", function () { var w = $("inW").value; $("inW").value = $("inH").value; $("inH").value = w; $("inPreset").value = ""; refresh(); });
+  $("inSize").addEventListener("change", function () { if (this.value !== "custom") $("inD").value = this.value; refresh(); });
+  ["inD", "inGap", "inMargin", "inHave"].forEach(function (id) { $(id).addEventListener("input", later); });
+  ["inShape", "inArr", "inFill"].forEach(function (id) { $(id).addEventListener("change", refresh); });
+  ["inSheet", "inBadge"].forEach(function (id) { $(id).addEventListener("input", later); });
+
+  // ===== 保存 =====
+  function download(blob, name) {
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+  }
+  $("saveBtn").addEventListener("click", function () {
+    if (!cur || !cur.pts.length) return;
+    var C = cur.C, k = Math.min(4, 2400 / Math.max(C.W, C.H));
+    var c = render(C, cur.pts, k, true);
+    c.toBlob(function (b) {
+      c.width = c.height = 0;
+      if (!b) { setSt("outSt", "画像を作れませんでした。", true); return; }
+      download(b, "痛バ配置_" + C.D + "mm_" + cur.pts.length + "個.png");
+      setSt("outSt", "図を画像で保存しました。");
+      track("itaba_save", { size: C.D, n: cur.pts.length, shape: C.shape, img: imgs.length > 0 ? 1 : 0 });
+    }, "image/png");
+  });
+
+  
+
+  if (EDITION === "full") {
+    $("pro-section").classList.add("hidden");
+  }
+  if (EDITION !== "full") {
+    $("privacyNote").innerHTML = '入力した内容はどこにも送信されません(すべてこのブラウザの中で処理します)。このページでは利用状況の把握のためにアクセス解析(Google Analytics)を使っています。<a href="https://policies.google.com/technologies/partner-sites?hl=ja" target="_blank" rel="noopener">Googleによるデータの使用について</a>';
+  }
+
+  refresh();
+})();
+</script>
+<!--UPSELL_JS_START-->
+<script>
+(function () {
+  "use strict";
+  var q = new URLSearchParams(location.search);
+  if (q.get("obs") === "1" || document.documentElement.classList.contains("obs")) return;
+  // 小さな案内(トースト)は、買い切り版がパソコン向けなので、マウス操作の広い画面でだけ出す
+  var pc = !!(window.matchMedia && matchMedia("(pointer:fine) and (min-width:720px)").matches);
+  var buy = document.getElementById("buyLink");
+  var pro = document.getElementById("pro-section");
+  if (!buy || !pro) return;
+  var FEATS = [];
+  var path = location.pathname.replace(/index\.html$/, "");
+  var KEY_CLOSED = "upsell_closed_until:" + path, KEY_SHOWN = "upsell_shown:" + path;
+  function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
+  function sess(k, v) { try { if (v === undefined) return sessionStorage.getItem(k); sessionStorage.setItem(k, v); } catch (e) { return null; } }
+  function gtagEv(name, p) { if (!window.dataLayer) return; (function () { window.dataLayer.push(arguments); })("event", name, p || {}); }
+
+  var shown = false;
+  function blocked() {
+    if (shown || sess(KEY_SHOWN) === "1") return true;
+    var until = Number(store(KEY_CLOSED) || 0);
+    return until && Date.now() < until;
+  }
+  function feats() {
+    if (FEATS.length) return FEATS;
+    var out = [];
+    var lis = pro.querySelectorAll(".feat-list li");
+    for (var i = 0; i < lis.length && out.length < 3; i++) {
+      var all = lis[i].textContent.replace(/\s+/g, " ").trim();
+      if (/スマホ|HTMLファイル|パソコンで使う/.test(all)) continue;
+      var st = lis[i].querySelectorAll("strong");
+      var t = st.length === 1 ? st[0].textContent : all.split(/[::。]/)[0];
+      t = t.replace(/[((][^()()]*[))]/g, "").replace(/\s+/g, " ").trim();
+      if (t.length > 40) t = t.slice(0, 39) + "…";
+      if (t) out.push(t);
+    }
+    return out;
+  }
+  // 「〜してください」「できません」など、失敗の表示が出ていたら案内しない
+  function failed() {
+    var els = document.querySelectorAll('[role="status"], [role="alert"], [aria-live]');
+    for (var i = 0; i < els.length; i++) {
+      if (pro.contains(els[i]) || !els[i].offsetParent) continue;
+      if (/ください|できません|できませんでした|失敗|ありません|エラー/.test(els[i].textContent)) return true;
+    }
+    return false;
+  }
+  function proVisible() {
+    var r = pro.getBoundingClientRect();
+    return r.top < innerHeight && r.bottom > 0;
+  }
+  function show(trigger) {
+    if (!pc || blocked() || (trigger === "action" && failed()) || proVisible()) return;
+    var list = feats();
+    if (!list.length) return;
+    shown = true;
+    sess(KEY_SHOWN, "1");
+    var box = document.createElement("aside");
+    box.className = "upsell-toast";
+    box.setAttribute("aria-label", "買い切り版のご案内");
+    box.setAttribute("aria-live", "polite");
+    document.body.appendChild(box);
+    var p = document.createElement("p");
+    p.textContent = trigger === "limit"
+      ? "この先は買い切り版の機能です。パソコン用の買い切り版(¥100・税込)なら:"
+      : "うまくできましたか? パソコン用の買い切り版(¥100・税込)なら、さらに:";
+    var ul = document.createElement("ul");
+    list.forEach(function (t) { var li = document.createElement("li"); li.textContent = t; ul.appendChild(li); });
+    var a = document.createElement("a");
+    a.className = "upsell-go";
+    a.id = "upsellToastLink";
+    a.href = buy.href;
+    a.target = "_blank";
+    a.rel = "noopener";
+    a.textContent = "BOOTHで見る(新しいタブ)";
+    var bg = getComputedStyle(buy).backgroundColor;
+    if (bg && !/rgba?\(0, 0, 0, 0\)|transparent/.test(bg)) a.style.background = bg;
+    var x = document.createElement("button");
+    x.type = "button";
+    x.className = "upsell-x";
+    x.setAttribute("aria-label", "この案内を閉じる");
+    x.textContent = "×";
+    function close(remember) {
+      if (box.parentNode) box.parentNode.removeChild(box);
+      document.removeEventListener("keydown", onKey);
+      if (remember) store(KEY_CLOSED, String(Date.now() + 7 * 864e5));
+    }
+    // Escはページ側の操作(選択解除など)にも使われるので、案内の中にフォーカスがある時だけ閉じる
+    function onKey(e) { if (e.key === "Escape" && box.contains(document.activeElement)) close(true); }
+    x.addEventListener("click", function () { close(true); });
+    a.addEventListener("click", function () { setTimeout(function () { close(false); }, 0); });
+    document.addEventListener("keydown", onKey);
+    setTimeout(function () {
+      var note = document.createElement("small");
+      note.className = "upsell-note";
+      note.textContent = "スマホではファイルを開けない機種があります";
+      box.appendChild(x); box.appendChild(p); box.appendChild(ul); box.appendChild(a); box.appendChild(note);
+    }, 50);
+    gtagEv("upsell_show", { trigger: trigger });
+  }
+
+  // 保存・コピー・印刷・書き出しを押した直後(結果を受け取れたタイミング)
+  var OK = /保存|コピー|印刷|書き出|ダウンロード|共有|PDF/;
+  var NG = /読み込|リセット|消|削除|このブラウザに保存|確認|イメージを見る|戻/;
+  document.addEventListener("click", function (e) {
+    var el = e.target && e.target.closest ? e.target.closest("button, a[download], input[type=button], input[type=submit]") : null;
+    if (!el || el.closest("#pro-section, .upsell-toast, #anshin")) return;
+    var label = (el.textContent || el.value || "").replace(/\s+/g, " ");
+    if (!OK.test(label) || NG.test(label)) return;
+    setTimeout(function () { show("action"); }, 1500);
+  }, true);
+
+  // 無料版の上限まわり
+  // (1) ページが出す「買い切り版」の一文に、購入欄へのリンクを足す(スマホでも)。🔒のタブは薄く表示されているので入れない
+  // (2) 案内(パソコンのみ)は、はっきりした合図のときだけ出す: 🔒のクリック・買い切り版にふれたalert・
+  //     初めて出た「〜まで/のみ/以降/入っていません」の上限の一文(計算のたびに出る誘導文や、同じ文の描き直しでは出さない)
+  var SKIP = "#pro-section, .upsell-toast, .upsell-top, #anshin, a, button, label, select, option, h1, h2, h3, .badge, header, footer, nav, textarea, pre, code, [contenteditable], svg";
+  var LIMIT = /まで|のみ|以降|入っていません/;
+  var seenText = {}, ready = false;
+  function goPro(e) {
+    if (e) e.preventDefault();
+    pro.setAttribute("tabindex", "-1");
+    pro.scrollIntoView({ behavior: "smooth", block: "start" });
+    pro.focus({ preventScroll: true });
+  }
+  function linkify(root, deep) {
+    var limitHit = false;
+    var els = root.matches("p, div, span, li") ? [root] : [];
+    if (deep) els = els.concat([].slice.call(root.querySelectorAll("p, div, span, li")));
+    els.forEach(function (el) {
+      if (el.closest(SKIP) || el.closest('[role="radio"], [role="option"], [role="tab"], [role="button"], [tabindex]:not([tabindex="-1"])') || el.querySelector("a, button, p, div, li, input, label")) return;
+      // 選択肢の「○○(買い切り版)」ではなく、文として買い切り版にふれている要素だけ
+      var own = "";
+      for (var n = el.firstChild; n; n = n.nodeType === 1 && n.className === "upsell-inline" ? null : n.nextSibling) if (n.nodeType === 3) own += n.nodeValue;
+      own = own.trim();
+      if (own.indexOf("買い切り版") < 0 || /[((]買い切り版[))]$/.test(own) || /^🔒/.test(own)) return;
+      var key = own.replace(/\d+/g, "#");
+      if (ready && !seenText[key] && LIMIT.test(own) && !el.closest(".teaser, #teaser, [id$=teaser], #tz")) limitHit = true;
+      seenText[key] = 1;
+      if (el.querySelector(".upsell-inline")) return;
+      var a = document.createElement("a");
+      a.className = "upsell-inline";
+      a.href = "#pro-section";
+      a.setAttribute("aria-label", "くわしく:買い切り版の説明へ移動");
+      a.textContent = "くわしく";
+      var ar = document.createElement("span");
+      ar.setAttribute("aria-hidden", "true");
+      ar.textContent = " ↓";
+      a.appendChild(ar);
+      a.addEventListener("click", goPro);
+      el.appendChild(document.createTextNode(" "));
+      el.appendChild(a);
+    });
+    return limitHit;
+  }
+  linkify(document.body, true);
+  setTimeout(function () { ready = true; }, 1500);
+  var topLink = document.querySelector("#upsellTop a");
+  if (topLink) topLink.addEventListener("click", goPro);
+  new MutationObserver(function (ms) {
+    // 変わったところだけを調べる(足された要素はその中も、文字の変更は親要素だけ)
+    var hit = false, done = new Set();
+    function check(t, deep) {
+      if (!t || t.nodeType !== 1 || done.has(t) || t.closest(".upsell-toast")) return;
+      done.add(t);
+      if (linkify(t, deep)) hit = true;
+    }
+    ms.forEach(function (m) {
+      if (m.type === "characterData") { check(m.target.parentNode, false); return; }
+      check(m.target, false);
+      for (var i = 0; i < m.addedNodes.length; i++) if (m.addedNodes[i].nodeType === 1) check(m.addedNodes[i], true);
+    });
+    if (hit) setTimeout(function () { show("limit"); }, 800);
+  }).observe(document.body, { childList: true, subtree: true, characterData: true });
+  document.addEventListener("click", function (e) {
+    var el = e.target && e.target.closest ? e.target.closest("button, div, span, li") : null;
+    var first = el && el.firstChild && el.firstChild.nodeType === 3 ? el.firstChild.nodeValue : "";
+    if (!/^\s*🔒/.test(first) || e.target.closest("#pro-section")) return;
+    if (pc) setTimeout(function () { show("limit"); }, 300); else goPro();
+  }, true);
+  var origAlert = window.alert;
+  window.alert = function (msg) {
+    var r = origAlert.apply(window, arguments);
+    if (/買い切り版/.test(String(msg))) setTimeout(function () { show("limit"); }, 300);
+    return r;
+  };
+})();
+</script>
+<!--UPSELL_JS_END-->
+</body>
+</html>
